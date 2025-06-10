@@ -1,7 +1,7 @@
 {
   "name": "json-sql-enhanced",
   "description": "Node.js library for mapping MongoDB-style query objects to SQL queries with enhanced operators and multi-dialect support",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "author": "Forward Email",
   "ava": {
     "files": [

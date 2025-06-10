@@ -1,0 +1,93 @@
+{
+  "name": "json-sql-enhanced",
+  "description": "Node.js library for mapping MongoDB-style query objects to SQL queries with enhanced operators and multi-dialect support",
+  "version": "2.0.0",
+  "author": "Forward Email",
+  "ava": {
+    "files": [
+      "tests/**/*.js"
+    ],
+    "verbose": true
+  },
+  "bugs": {
+    "url": "https://github.com/forwardemail/json-sql-enhanced/issues"
+  },
+  "commitlint": {
+    "extends": [
+      "@commitlint/config-conventional"
+    ]
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^18.0.0",
+    "@commitlint/config-conventional": "^18.0.0",
+    "ava": "^6.0.0",
+    "c8": "^8.0.0",
+    "eslint": "^8.0.0",
+    "fixpack": "^4.0.0",
+    "husky": "^8.0.0",
+    "lint-staged": "^15.0.0",
+    "prettier": "^3.0.0",
+    "xo": "^0.56.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "homepage": "https://github.com/forwardemail/json-sql-enhanced#readme",
+  "keywords": [
+    "builder",
+    "json",
+    "mongodb",
+    "mssql",
+    "mysql",
+    "operators",
+    "postgresql",
+    "query",
+    "regex",
+    "sql",
+    "sqlite"
+  ],
+  "license": "MIT",
+  "lint-staged": {
+    "*.js": [
+      "xo --fix",
+      "prettier --write"
+    ],
+    "*.{json,md}": [
+      "prettier --write"
+    ],
+    "package.json": [
+      "fixpack"
+    ]
+  },
+  "main": "lib/index.js",
+  "prettier": {
+    "semi": true,
+    "singleQuote": true,
+    "tabWidth": 2,
+    "useTabs": false,
+    "trailingComma": "es5"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/forwardemail/json-sql-enhanced.git"
+  },
+  "scripts": {
+    "fixpack": "fixpack",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "xo",
+    "lint:fix": "xo --fix",
+    "precommit": "lint-staged",
+    "prepare": "husky install",
+    "test": "ava",
+    "test:coverage": "c8 ava",
+    "test:watch": "ava --watch"
+  },
+  "xo": {
+    "space": 2,
+    "rules": {
+      "unicorn/prefer-module": "off",
+      "unicorn/prefer-node-protocol": "off"
+    }
+  }
+}

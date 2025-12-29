@@ -1,9 +1,9 @@
-const {Buffer} = require('buffer');
+const { Buffer } = require('buffer');
 const test = require('ava');
 const jsonSql = require('../lib/index.js')();
 
 // Simple test to verify basic functionality
-test('Basic select query', t => {
+test('Basic select query', (t) => {
   const result = jsonSql.build({
     type: 'select',
     table: 'users',
@@ -17,7 +17,7 @@ test('Basic select query', t => {
   t.true(result.query.includes('name'));
 });
 
-test('Basic insert query', t => {
+test('Basic insert query', (t) => {
   const result = jsonSql.build({
     type: 'insert',
     table: 'users',
@@ -33,13 +33,13 @@ test('Basic insert query', t => {
   t.true(result.query.includes('age'));
 });
 
-test('Basic comparison operators', t => {
+test('Basic comparison operators', (t) => {
   const result = jsonSql.build({
     type: 'select',
     table: 'users',
     condition: {
-      age: {$gt: 18},
-      status: {$in: ['active', 'pending']},
+      age: { $gt: 18 },
+      status: { $in: ['active', 'pending'] },
     },
   });
 
@@ -48,29 +48,29 @@ test('Basic comparison operators', t => {
   t.true(result.query.includes('in'));
 });
 
-test('MongoDB $regex operator', t => {
+test('MongoDB $regex operator', (t) => {
   const result = jsonSql.build({
     type: 'select',
     table: 'users',
     condition: {
-      name: {$regex: 'John'},
+      name: { $regex: 'John' },
     },
   });
 
   t.true(result.query.includes('name'));
   t.true(
-    result.query.includes('LIKE')
-      || result.query.includes('John')
-      || result.values.p1.includes('John'),
+    result.query.includes('LIKE') ||
+      result.query.includes('John') ||
+      result.values.p1.includes('John')
   );
 });
 
-test('MongoDB $not operator', t => {
+test('MongoDB $not operator', (t) => {
   const result = jsonSql.build({
     type: 'select',
     table: 'users',
     condition: {
-      status: {$not: 'inactive'},
+      status: { $not: 'inactive' },
     },
   });
 
@@ -78,12 +78,12 @@ test('MongoDB $not operator', t => {
   t.true(result.query.includes('!=') || result.query.includes('NOT'));
 });
 
-test('MongoDB $exists operator', t => {
+test('MongoDB $exists operator', (t) => {
   const result = jsonSql.build({
     type: 'select',
     table: 'users',
     condition: {
-      email: {$exists: true},
+      email: { $exists: true },
     },
   });
 
@@ -91,12 +91,12 @@ test('MongoDB $exists operator', t => {
   t.true(result.query.includes('IS NOT NULL'));
 });
 
-test('MongoDB $size operator', t => {
+test('MongoDB $size operator', (t) => {
   const result = jsonSql.build({
     type: 'select',
     table: 'users',
     condition: {
-      tags: {$size: 3},
+      tags: { $size: 3 },
     },
   });
 
@@ -104,7 +104,7 @@ test('MongoDB $size operator', t => {
   t.true(result.query.includes('3'));
 });
 
-test('GitHub Issue #57 - Empty objects as null', t => {
+test('GitHub Issue #57 - Empty objects as null', (t) => {
   const result = jsonSql.build({
     type: 'select',
     table: 'users',
@@ -117,7 +117,7 @@ test('GitHub Issue #57 - Empty objects as null', t => {
   t.true(result.query.includes('null'));
 });
 
-test('GitHub Issue #56 - Buffer support', t => {
+test('GitHub Issue #56 - Buffer support', (t) => {
   const buffer = Buffer.from('test', 'utf8');
   const result = jsonSql.build({
     type: 'insert',
@@ -131,7 +131,7 @@ test('GitHub Issue #56 - Buffer support', t => {
   t.true(typeof result.values.p1 === 'string');
 });
 
-test('GitHub Issue #55 - BSON ObjectId support', t => {
+test('GitHub Issue #55 - BSON ObjectId support', (t) => {
   const mockObjectId = {
     toHexString() {
       return '507f1f77bcf86cd799439011';
@@ -148,4 +148,85 @@ test('GitHub Issue #55 - BSON ObjectId support', t => {
 
   t.true(result.query.includes('_id'));
   t.true(result.values.p1 === '507f1f77bcf86cd799439011');
+});
+
+test('bufferAsNative option - Buffer passed through without conversion', (t) => {
+  const builder = require('../lib/index.js')({
+    bufferAsNative: true,
+  });
+
+  const buffer = Buffer.from('test data', 'utf8');
+  const result = builder.build({
+    type: 'insert',
+    table: 'files',
+    values: {
+      data: buffer,
+    },
+  });
+
+  t.true(result.query.includes('data'));
+  t.true(Buffer.isBuffer(result.values.p1));
+  t.true(result.values.p1.equals(buffer));
+});
+
+test('bufferAsNative option - mixed Buffer and string values', (t) => {
+  const builder = require('../lib/index.js')({
+    bufferAsNative: true,
+  });
+
+  const buffer = Buffer.from('binary data', 'utf8');
+  const result = builder.build({
+    type: 'insert',
+    table: 'files',
+    values: {
+      name: 'test.txt',
+      data: buffer,
+      size: 100,
+    },
+  });
+
+  t.true(result.query.includes('name'));
+  t.true(result.query.includes('data'));
+  t.true(result.query.includes('size'));
+  t.true(result.query.includes('100')); // Numbers are inlined in query
+  t.true(typeof result.values.p1 === 'string');
+  t.true(Buffer.isBuffer(result.values.p2));
+});
+
+test('bufferAsNative option - default false preserves hex behavior', (t) => {
+  const builder = require('../lib/index.js')({
+    bufferAsNative: false,
+  });
+
+  const buffer = Buffer.from('test', 'utf8');
+  const result = builder.build({
+    type: 'insert',
+    table: 'files',
+    values: {
+      data: buffer,
+    },
+  });
+
+  t.true(typeof result.values.p1 === 'string');
+  t.is(result.values.p1, '74657374'); // 'test' in hex
+});
+
+test('bufferAsNative option - works with namedValues false', (t) => {
+  const builder = require('../lib/index.js')({
+    bufferAsNative: true,
+    namedValues: false,
+    indexedValues: false,
+  });
+
+  const buffer = Buffer.from('test', 'utf8');
+  const result = builder.build({
+    type: 'insert',
+    table: 'files',
+    values: {
+      data: buffer,
+    },
+  });
+
+  t.true(Array.isArray(result.values));
+  t.true(Buffer.isBuffer(result.values[0]));
 });
